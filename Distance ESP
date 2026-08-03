@@ -1,62 +1,134 @@
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 
-local LocalPlayer = Players.LocalPlayer
+local ESP = {}
+
+local Objects = {}
+local Connections = {}
 
 
-local function setup(player)
+local function create(player)
 
-	if player == LocalPlayer then return end
+	if player == Players.LocalPlayer then
+		return
+	end
 
-	local function characterAdded(char)
 
-		local root = char:WaitForChild("HumanoidRootPart")
+	local function characterAdded(character)
+
+		local root = character:WaitForChild("HumanoidRootPart",5)
+
+		if not root then
+			return
+		end
+
 
 		local gui = Instance.new("BillboardGui")
-		gui.Size = UDim2.new(0,150,0,30)
+		gui.Name = "DistanceESP"
+		gui.Size = UDim2.new(0,120,0,30)
 		gui.StudsOffset = Vector3.new(0,4,0)
 		gui.AlwaysOnTop = true
 		gui.Parent = root
 
 
-		local text = Instance.new("TextLabel")
-		text.Size = UDim2.fromScale(1,1)
-		text.BackgroundTransparency = 1
-		text.TextColor3 = Color3.new(1,1,0)
-		text.TextStrokeTransparency = 0
-		text.TextScaled = true
-		text.Parent = gui
+		local label = Instance.new("TextLabel")
+
+		label.Size = UDim2.fromScale(1,1)
+		label.BackgroundTransparency = 1
+		label.TextColor3 = Color3.fromRGB(255,255,0)
+		label.TextStrokeTransparency = 0
+		label.TextScaled = true
+		label.Font = Enum.Font.SourceSansBold
+		label.Parent = gui
 
 
+
+		local connection
+
+		connection =
 		RunService.RenderStepped:Connect(function()
 
-			if LocalPlayer.Character then
+			local myChar = Players.LocalPlayer.Character
 
-				local dist =
+			if myChar and myChar:FindFirstChild("HumanoidRootPart") then
+
+				local distance =
 					math.floor(
-						(LocalPlayer.Character.HumanoidRootPart.Position -
+						(myChar.HumanoidRootPart.Position -
 						root.Position).Magnitude
 					)
 
-				text.Text = dist.." meters"
+				label.Text =
+					distance.." m"
 
 			end
+
 		end)
 
+
+		Objects[player] = gui
+		Connections[player] = connection
+
 	end
+
 
 
 	if player.Character then
 		characterAdded(player.Character)
 	end
 
-	player.CharacterAdded:Connect(characterAdded)
+
+	Connections[player] =
+		player.CharacterAdded:Connect(characterAdded)
 
 end
 
 
-for _,p in Players:GetPlayers() do
-	setup(p)
+
+function ESP.Enable()
+
+	for _,player in ipairs(Players:GetPlayers()) do
+		create(player)
+	end
+
+
+	ESP.PlayerConnection =
+		Players.PlayerAdded:Connect(create)
+
 end
 
-Players.PlayerAdded:Connect(setup)
+
+
+function ESP.Disable()
+
+
+	for _,gui in pairs(Objects) do
+
+		if gui then
+			gui:Destroy()
+		end
+
+	end
+
+
+	for _,connection in pairs(Connections) do
+
+		if connection then
+			connection:Disconnect()
+		end
+
+	end
+
+
+	if ESP.PlayerConnection then
+		ESP.PlayerConnection:Disconnect()
+	end
+
+
+	table.clear(Objects)
+	table.clear(Connections)
+
+end
+
+
+return ESP
