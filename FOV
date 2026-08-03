@@ -1,0 +1,24 @@
+local Camera = workspace.CurrentCamera
+
+local FOV = {}
+
+local Enabled = true
+local DefaultFOV = Camera.FieldOfView
+
+function FOV.Enable()
+    Enabled = true
+end
+
+function FOV.Disable()
+    Enabled = false
+    Camera.FieldOfView = DefaultFOV
+end
+
+function FOV.Set(Value)
+    if Enabled then
+        local NewFOV = 50 + (Value / 100) * 70
+        Camera.FieldOfView = NewFOV
+    end
+end
+
+return FOV
