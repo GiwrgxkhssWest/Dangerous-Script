@@ -8,37 +8,7 @@ local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
 
-local Connection
-
-
-local function GetTarget()
-	local closest
-	local distance = math.huge
-
-	local character = LocalPlayer.Character
-	if not character or not character:FindFirstChild("HumanoidRootPart") then
-		return nil
-	end
-
-	for _, player in ipairs(Players:GetPlayers()) do
-		if player ~= LocalPlayer 
-			and player.Character 
-			and player.Character:FindFirstChild("HumanoidRootPart") then
-
-			local dist = (
-				character.HumanoidRootPart.Position -
-				player.Character.HumanoidRootPart.Position
-			).Magnitude
-
-			if dist < distance then
-				distance = dist
-				closest = player
-			end
-		end
-	end
-
-	return closest
-end
+local Connection = nil
 
 
 function AimAssist.Enable()
@@ -51,20 +21,20 @@ function AimAssist.Enable()
 
 	Connection = RunService.RenderStepped:Connect(function()
 
-		local target = GetTarget()
+		-- Add your own game's training target logic here
+		-- Example: NPC dummy / test target
 
-		if target 
-			and target.Character
-			and target.Character:FindFirstChild("Head") then
+		local Target = workspace:FindFirstChild("TestTarget")
 
-			-- Your own game's testing camera assist
+		if Target and Target:FindFirstChild("Head") then
 			Camera.CFrame = CFrame.lookAt(
 				Camera.CFrame.Position,
-				target.Character.Head.Position
+				Target.Head.Position
 			)
-
 		end
+
 	end)
+
 end
 
 
@@ -76,6 +46,7 @@ function AimAssist.Disable()
 		Connection:Disconnect()
 		Connection = nil
 	end
+
 end
 
 
