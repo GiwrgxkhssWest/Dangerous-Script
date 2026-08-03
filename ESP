@@ -1,36 +1,65 @@
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 
-local function addHighlight(player)
-	if player == LocalPlayer then
-		return
-	end
+local ESP = {}
+ESP.Enabled = false
 
-	local function apply(character)
-		if character:FindFirstChild("ESPHighlight") then
-			return
-		end
+local function apply(character)
+	if character:FindFirstChild("ESPHighlight") then return end
 
-		local highlight = Instance.new("Highlight")
-		highlight.Name = "ESPHighlight"
-		highlight.Adornee = character
-		highlight.FillColor = Color3.fromRGB(255, 0, 0)
-		highlight.OutlineColor = Color3.fromRGB(255, 255, 255)
-		highlight.FillTransparency = 0.4
-		highlight.OutlineTransparency = 0
-		highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
-		highlight.Parent = character
-	end
-
-	if player.Character then
-		apply(player.Character)
-	end
-
-	player.CharacterAdded:Connect(apply)
+	local highlight = Instance.new("Highlight")
+	highlight.Name = "ESPHighlight"
+	highlight.Adornee = character
+	highlight.FillColor = Color3.fromRGB(255, 0, 0)
+	highlight.OutlineColor = Color3.fromRGB(255, 255, 255)
+	highlight.FillTransparency = 0.4
+	highlight.OutlineTransparency = 0
+	highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+	highlight.Parent = character
 end
+
+local function remove(character)
+	local highlight = character:FindFirstChild("ESPHighlight")
+	if highlight then
+		highlight:Destroy()
+	end
+end
+
+local function update()
+	for _, player in ipairs(Players:GetPlayers()) do
+		if player ~= LocalPlayer and player.Character then
+			if ESP.Enabled then
+				apply(player.Character)
+			else
+				remove(player.Character)
+			end
+		end
+	end
+end
+
+function ESP.Toggle()
+	ESP.Enabled = not ESP.Enabled
+	update()
+end
+
+Players.PlayerAdded:Connect(function(player)
+	player.CharacterAdded:Connect(function(character)
+		if ESP.Enabled then
+			task.wait(0.2)
+			apply(character)
+		end
+	end)
+end)
 
 for _, player in ipairs(Players:GetPlayers()) do
-	addHighlight(player)
+	if player ~= LocalPlayer then
+		player.CharacterAdded:Connect(function(character)
+			if ESP.Enabled then
+				task.wait(0.2)
+				apply(character)
+			end
+		end)
+	end
 end
 
-Players.PlayerAdded:Connect(addHighlight)
+return ESP
