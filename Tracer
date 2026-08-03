@@ -1,0 +1,79 @@
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+
+local LocalPlayer = Players.LocalPlayer
+local Camera = workspace.CurrentCamera
+
+
+local function createTracer(player)
+
+	if player == LocalPlayer then return end
+
+	local line = Instance.new("Beam")
+	line.Name = "TracerESP"
+
+
+	local attachment0 = Instance.new("Attachment")
+	local attachment1 = Instance.new("Attachment")
+
+
+	local function setup(character)
+
+		local root = character:WaitForChild("HumanoidRootPart")
+
+		attachment1.Parent = root
+
+
+		local part = Instance.new("Part")
+		part.Name = "TracerOrigin"
+		part.Anchored = true
+		part.CanCollide = false
+		part.Transparency = 1
+		part.Size = Vector3.new(0.1,0.1,0.1)
+		part.Parent = workspace
+
+
+		attachment0.Parent = part
+
+
+		line.Attachment0 = attachment0
+		line.Attachment1 = attachment1
+		line.FaceCamera = true
+		line.Width0 = 0.05
+		line.Width1 = 0.05
+		line.Color = ColorSequence.new(Color3.new(1,0,0))
+		line.Parent = part
+
+
+		RunService.RenderStepped:Connect(function()
+
+			local viewport = Camera.ViewportSize
+
+			part.Position =
+				Camera.CFrame:PointToWorldSpace(
+					Vector3.new(
+						0,
+						-3,
+						-10
+					)
+				)
+
+		end)
+
+	end
+
+
+	if player.Character then
+		setup(player.Character)
+	end
+
+	player.CharacterAdded:Connect(setup)
+
+end
+
+
+for _,player in Players:GetPlayers() do
+	createTracer(player)
+end
+
+Players.PlayerAdded:Connect(createTracer)
