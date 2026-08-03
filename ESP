@@ -1,0 +1,89 @@
+local Players = game:GetService("Players")
+local localPlayer = Players.LocalPlayer
+
+local ESP = {}
+ESP.Enabled = false
+
+local function addESP(character)
+    if not character then return end
+    if character:FindFirstChild("ESP_Highlight") then return end
+
+    local highlight = Instance.new("Highlight")
+    highlight.Name = "ESP_Highlight"
+    highlight.FillColor = Color3.fromRGB(255, 0, 0)
+    highlight.OutlineColor = Color3.fromRGB(255, 255, 255)
+    highlight.FillTransparency = 0.5
+    highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+    highlight.Parent = character
+
+    local head = character:FindFirstChild("Head")
+    if head then
+        local billboard = Instance.new("BillboardGui")
+        billboard.Name = "ESP_Info"
+        billboard.Size = UDim2.new(0, 200, 0, 50)
+        billboard.StudsOffset = Vector3.new(0, 2, 0)
+        billboard.AlwaysOnTop = true
+        billboard.Parent = head
+
+        local label = Instance.new("TextLabel")
+        label.Size = UDim2.new(1, 0, 1, 0)
+        label.BackgroundTransparency = 1
+        label.TextColor3 = Color3.new(1, 1, 1)
+        label.TextStrokeTransparency = 0
+        label.Font = Enum.Font.SourceSansBold
+        label.TextScaled = true
+        label.Text = character.Name
+        label.Parent = billboard
+    end
+end
+
+local function removeESP(character)
+    if not character then return end
+    local h = character:FindFirstChild("ESP_Highlight")
+    if h then h:Destroy() end
+    local head = character:FindFirstChild("Head")
+    if head then
+        local b = head:FindFirstChild("ESP_Info")
+        if b then b:Destroy() end
+    end
+end
+
+local function refresh()
+    for _, player in ipairs(Players:GetPlayers()) do
+        if player ~= localPlayer and player.Character then
+            if ESP.Enabled then
+                addESP(player.Character)
+            else
+                removeESP(player.Character)
+            end
+        end
+    end
+end
+
+function ESP.Toggle()
+    ESP.Enabled = not ESP.Enabled
+    refresh()
+end
+
+-- Keep ESP applied to players who spawn/respawn while enabled
+Players.PlayerAdded:Connect(function(player)
+    player.CharacterAdded:Connect(function(character)
+        if ESP.Enabled then
+            task.wait(0.1)
+            addESP(character)
+        end
+    end)
+end)
+
+for _, player in ipairs(Players:GetPlayers()) do
+    if player ~= localPlayer then
+        player.CharacterAdded:Connect(function(character)
+            if ESP.Enabled then
+                task.wait(0.1)
+                addESP(character)
+            end
+        end)
+    end
+end
+
+return ESP
