@@ -1,80 +1,32 @@
-local CameraLock = {}
-
 local Players = game:GetService("Players")
-local RunService = game:GetService("RunService")
 
 local LocalPlayer = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
 
-CameraLock.Enabled = false
-CameraLock.Target = nil
+local function GetClosestTarget()
+	local closestPlayer = nil
+	local shortestDistance = math.huge
 
-local Connection
-
-function CameraLock.SetTarget(Player)
-	CameraLock.Target = Player
-	print("[CameraLock] Target:", Player and Player.Name or "None")
-end
-
-
-function CameraLock.Enable()
-
-	if CameraLock.Enabled then
-		return
+	local myCharacter = LocalPlayer.Character
+	if not myCharacter or not myCharacter:FindFirstChild("HumanoidRootPart") then
+		return nil
 	end
 
-	CameraLock.Enabled = true
+	local myPosition = myCharacter.HumanoidRootPart.Position
 
-	print("[CameraLock] Enabled")
+	for _, player in ipairs(Players:GetPlayers()) do
+		if player ~= LocalPlayer 
+			and player.Character 
+			and player.Character:FindFirstChild("Head") then
 
-	Connection = RunService.RenderStepped:Connect(function()
+			local distance = (player.Character.Head.Position - myPosition).Magnitude
 
-		if not CameraLock.Enabled then
-			return
+			if distance < shortestDistance then
+				shortestDistance = distance
+				closestPlayer = player
+			end
 		end
-
-		if not CameraLock.Target then
-			return
-		end
-
-		local Character = CameraLock.Target.Character
-
-		if not Character then
-			return
-		end
-
-		local Head = Character:FindFirstChild("Head")
-
-		if not Head then
-			return
-		end
-
-		Camera.CFrame = CFrame.lookAt(
-			Camera.CFrame.Position,
-			Head.Position
-		)
-
-	end)
-
-end
-
-
-function CameraLock.Disable()
-
-	if not CameraLock.Enabled then
-		return
 	end
 
-	CameraLock.Enabled = false
-
-	print("[CameraLock] Disabled")
-
-	if Connection then
-		Connection:Disconnect()
-		Connection = nil
-	end
-
+	return closestPlayer
 end
-
-
-return CameraLock
