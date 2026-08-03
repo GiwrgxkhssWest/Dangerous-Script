@@ -1,0 +1,62 @@
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+
+local LocalPlayer = Players.LocalPlayer
+
+
+local function setup(player)
+
+	if player == LocalPlayer then return end
+
+	local function characterAdded(char)
+
+		local root = char:WaitForChild("HumanoidRootPart")
+
+		local gui = Instance.new("BillboardGui")
+		gui.Size = UDim2.new(0,150,0,30)
+		gui.StudsOffset = Vector3.new(0,4,0)
+		gui.AlwaysOnTop = true
+		gui.Parent = root
+
+
+		local text = Instance.new("TextLabel")
+		text.Size = UDim2.fromScale(1,1)
+		text.BackgroundTransparency = 1
+		text.TextColor3 = Color3.new(1,1,0)
+		text.TextStrokeTransparency = 0
+		text.TextScaled = true
+		text.Parent = gui
+
+
+		RunService.RenderStepped:Connect(function()
+
+			if LocalPlayer.Character then
+
+				local dist =
+					math.floor(
+						(LocalPlayer.Character.HumanoidRootPart.Position -
+						root.Position).Magnitude
+					)
+
+				text.Text = dist.." meters"
+
+			end
+		end)
+
+	end
+
+
+	if player.Character then
+		characterAdded(player.Character)
+	end
+
+	player.CharacterAdded:Connect(characterAdded)
+
+end
+
+
+for _,p in Players:GetPlayers() do
+	setup(p)
+end
+
+Players.PlayerAdded:Connect(setup)
