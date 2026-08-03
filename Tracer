@@ -1,79 +1,115 @@
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 
-local LocalPlayer = Players.LocalPlayer
-local Camera = workspace.CurrentCamera
+local ESP = {}
+
+local Objects = {}
+local Connection
 
 
-local function createTracer(player)
+local function create(player)
 
-	if player == LocalPlayer then return end
-
-	local line = Instance.new("Beam")
-	line.Name = "TracerESP"
-
-
-	local attachment0 = Instance.new("Attachment")
-	local attachment1 = Instance.new("Attachment")
+	if player == Players.LocalPlayer then
+		return
+	end
 
 
-	local function setup(character)
+	local function characterAdded(character)
 
-		local root = character:WaitForChild("HumanoidRootPart")
+		local root = character:WaitForChild("HumanoidRootPart",5)
 
-		attachment1.Parent = root
-
-
-		local part = Instance.new("Part")
-		part.Name = "TracerOrigin"
-		part.Anchored = true
-		part.CanCollide = false
-		part.Transparency = 1
-		part.Size = Vector3.new(0.1,0.1,0.1)
-		part.Parent = workspace
+		if not root then
+			return
+		end
 
 
-		attachment0.Parent = part
+		local startPart = Instance.new("Part")
+		startPart.Name = "TracerStart"
+		startPart.Anchored = true
+		startPart.CanCollide = false
+		startPart.Transparency = 1
+		startPart.Size = Vector3.new(.1,.1,.1)
+		startPart.Parent = workspace
 
 
-		line.Attachment0 = attachment0
-		line.Attachment1 = attachment1
-		line.FaceCamera = true
-		line.Width0 = 0.05
-		line.Width1 = 0.05
-		line.Color = ColorSequence.new(Color3.new(1,0,0))
-		line.Parent = part
+		local a0 = Instance.new("Attachment")
+		a0.Parent = startPart
 
 
-		RunService.RenderStepped:Connect(function()
+		local a1 = Instance.new("Attachment")
+		a1.Parent = root
 
-			local viewport = Camera.ViewportSize
 
-			part.Position =
-				Camera.CFrame:PointToWorldSpace(
-					Vector3.new(
-						0,
-						-3,
-						-10
-					)
-				)
+		local beam = Instance.new("Beam")
 
-		end)
+		beam.Name = "TracerESP"
+		beam.Attachment0 = a0
+		beam.Attachment1 = a1
+		beam.FaceCamera = true
+		beam.Width0 = 0.05
+		beam.Width1 = 0.05
+
+		beam.Color =
+			ColorSequence.new(
+				Color3.fromRGB(255,0,0)
+			)
+
+		beam.Parent = startPart
+
+
+		Objects[player] = {
+			Part = startPart,
+			Beam = beam
+		}
 
 	end
 
 
 	if player.Character then
-		setup(player.Character)
+		characterAdded(player.Character)
 	end
 
-	player.CharacterAdded:Connect(setup)
+
+	player.CharacterAdded:Connect(characterAdded)
 
 end
 
 
-for _,player in Players:GetPlayers() do
-	createTracer(player)
+
+function ESP.Enable()
+
+	for _,player in Players:GetPlayers() do
+		create(player)
+	end
+
+
+	Connection =
+		Players.PlayerAdded:Connect(create)
+
 end
 
-Players.PlayerAdded:Connect(createTracer)
+
+
+function ESP.Disable()
+
+	for _,data in pairs(Objects) do
+
+		if data.Part then
+			data.Part:Destroy()
+		end
+
+	end
+
+
+	table.clear(Objects)
+
+
+	if Connection then
+		Connection:Disconnect()
+		Connection = nil
+	end
+
+end
+
+
+return ESP
