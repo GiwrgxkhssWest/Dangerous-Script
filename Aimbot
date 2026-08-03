@@ -1,63 +1,82 @@
-local Players = game:GetService("Players")
+local AimAssist = {}
+
+AimAssist.Enabled = false
+
 local RunService = game:GetService("RunService")
+local Players = game:GetService("Players")
 
 local LocalPlayer = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
 
-local AimAssistEnabled = false
-local MaxDistance = 200
-local Smoothness = 0.15
+local Connection
 
-local function GetClosestPlayer()
-	local Closest = nil
-	local ShortestDistance = MaxDistance
 
-	local Character = LocalPlayer.Character
-	if not Character or not Character:FindFirstChild("Head") then
+local function GetTarget()
+	local closest
+	local distance = math.huge
+
+	local character = LocalPlayer.Character
+	if not character or not character:FindFirstChild("HumanoidRootPart") then
 		return nil
 	end
 
-	for _, Player in pairs(Players:GetPlayers()) do
-		if Player ~= LocalPlayer 
-			and Player.Character
-			and Player.Character:FindFirstChild("Head") then
+	for _, player in ipairs(Players:GetPlayers()) do
+		if player ~= LocalPlayer 
+			and player.Character 
+			and player.Character:FindFirstChild("HumanoidRootPart") then
 
-			local Distance = (Character.Head.Position - Player.Character.Head.Position).Magnitude
+			local dist = (
+				character.HumanoidRootPart.Position -
+				player.Character.HumanoidRootPart.Position
+			).Magnitude
 
-			if Distance < ShortestDistance then
-				ShortestDistance = Distance
-				Closest = Player
+			if dist < distance then
+				distance = dist
+				closest = player
 			end
 		end
 	end
 
-	return Closest
+	return closest
 end
 
 
-RunService.RenderStepped:Connect(function()
-	if AimAssistEnabled then
+function AimAssist.Enable()
 
-		local Target = GetClosestPlayer()
+	if AimAssist.Enabled then
+		return
+	end
 
-		if Target 
-			and Target.Character 
-			and Target.Character:FindFirstChild("Head") then
+	AimAssist.Enabled = true
 
-			local TargetPosition = Target.Character.Head.Position
+	Connection = RunService.RenderStepped:Connect(function()
 
-			Camera.CFrame = Camera.CFrame:Lerp(
-				CFrame.new(Camera.CFrame.Position, TargetPosition),
-				Smoothness
+		local target = GetTarget()
+
+		if target 
+			and target.Character
+			and target.Character:FindFirstChild("Head") then
+
+			-- Your own game's testing camera assist
+			Camera.CFrame = CFrame.lookAt(
+				Camera.CFrame.Position,
+				target.Character.Head.Position
 			)
 
 		end
-	end
-end)
-
-
--- Testing toggle
-_G.ToggleAimAssist = function()
-	AimAssistEnabled = not AimAssistEnabled
-	print("Aim Assist:", AimAssistEnabled)
+	end)
 end
+
+
+function AimAssist.Disable()
+
+	AimAssist.Enabled = false
+
+	if Connection then
+		Connection:Disconnect()
+		Connection = nil
+	end
+end
+
+
+return AimAssist
