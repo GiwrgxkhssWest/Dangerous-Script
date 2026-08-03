@@ -1,32 +1,56 @@
 local Players = game:GetService("Players")
 
-local LocalPlayer = Players.LocalPlayer
+local ESP = {}
 
-local function setup(player)
-	if player == LocalPlayer then return end
+local Objects = {}
+local Connections = {}
 
-	local function characterAdded(char)
+local function create(player)
 
-		local head = char:WaitForChild("Head")
+	if player == Players.LocalPlayer then
+		return
+	end
+
+	local function characterAdded(character)
+
+		local head = character:WaitForChild("Head",5)
+
+		if not head then
+			return
+		end
+
+
+		local old = head:FindFirstChild("NameESP")
+
+		if old then
+			old:Destroy()
+		end
+
 
 		local gui = Instance.new("BillboardGui")
 		gui.Name = "NameESP"
-		gui.Size = UDim2.new(0,200,0,40)
+		gui.Size = UDim2.new(0,220,0,40)
 		gui.StudsOffset = Vector3.new(0,3,0)
 		gui.AlwaysOnTop = true
 		gui.Parent = head
 
-		local text = Instance.new("TextLabel")
-		text.Size = UDim2.fromScale(1,1)
-		text.BackgroundTransparency = 1
-		text.TextColor3 = Color3.new(1,1,1)
-		text.TextStrokeTransparency = 0
-		text.TextScaled = true
-		text.Text =
-			player.DisplayName ..
-			" (@"..player.Name..")"
 
-		text.Parent = gui
+		local label = Instance.new("TextLabel")
+		label.Size = UDim2.fromScale(1,1)
+		label.BackgroundTransparency = 1
+		label.TextColor3 = Color3.fromRGB(255,255,255)
+		label.TextStrokeTransparency = 0
+		label.TextScaled = true
+		label.Font = Enum.Font.SourceSansBold
+
+		label.Text =
+			player.DisplayName ..
+			" (@" .. player.Name .. ")"
+
+		label.Parent = gui
+
+
+		Objects[player] = gui
 	end
 
 
@@ -34,12 +58,55 @@ local function setup(player)
 		characterAdded(player.Character)
 	end
 
-	player.CharacterAdded:Connect(characterAdded)
+
+	Connections[player] =
+		player.CharacterAdded:Connect(characterAdded)
+
 end
 
 
-for _,p in Players:GetPlayers() do
-	setup(p)
+
+function ESP.Enable()
+
+	for _,player in ipairs(Players:GetPlayers()) do
+		create(player)
+	end
+
+
+	ESP.PlayerConnection =
+		Players.PlayerAdded:Connect(create)
+
 end
 
-Players.PlayerAdded:Connect(setup)
+
+
+function ESP.Disable()
+
+	for _,gui in pairs(Objects) do
+
+		if gui then
+			gui:Destroy()
+		end
+
+	end
+
+
+	for _,connection in pairs(Connections) do
+		connection:Disconnect()
+	end
+
+
+	if ESP.PlayerConnection then
+		ESP.PlayerConnection:Disconnect()
+		ESP.PlayerConnection = nil
+	end
+
+
+	table.clear(Objects)
+	table.clear(Connections)
+
+end
+
+
+
+return ESP
