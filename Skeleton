@@ -1,0 +1,88 @@
+local Players = game:GetService("Players")
+
+local LocalPlayer = Players.LocalPlayer
+
+
+local Connections = {
+	{"Head","UpperTorso"},
+	{"UpperTorso","LowerTorso"},
+
+	{"UpperTorso","LeftUpperArm"},
+	{"LeftUpperArm","LeftLowerArm"},
+	{"LeftLowerArm","LeftHand"},
+
+	{"UpperTorso","RightUpperArm"},
+	{"RightUpperArm","RightLowerArm"},
+	{"RightLowerArm","RightHand"},
+
+	{"LowerTorso","LeftUpperLeg"},
+	{"LeftUpperLeg","LeftLowerLeg"},
+	{"LeftLowerLeg","LeftFoot"},
+
+	{"LowerTorso","RightUpperLeg"},
+	{"RightUpperLeg","RightLowerLeg"},
+	{"RightLowerLeg","RightFoot"},
+}
+
+
+
+local function setup(player)
+
+	if player == LocalPlayer then return end
+
+
+	local function characterAdded(char)
+
+		for _,connection in pairs(Connections) do
+
+			local a = char:FindFirstChild(connection[1])
+			local b = char:FindFirstChild(connection[2])
+
+
+			if a and b then
+
+				local att1 = Instance.new("Attachment")
+				local att2 = Instance.new("Attachment")
+
+				att1.Parent = a
+				att2.Parent = b
+
+
+				local beam = Instance.new("Beam")
+
+				beam.Attachment0 = att1
+				beam.Attachment1 = att2
+
+				beam.Width0 = 0.05
+				beam.Width1 = 0.05
+
+				beam.Color =
+					ColorSequence.new(
+						Color3.new(0,1,1)
+					)
+
+				beam.FaceCamera = true
+				beam.Parent = char
+
+			end
+		end
+
+	end
+
+
+	if player.Character then
+		characterAdded(player.Character)
+	end
+
+	player.CharacterAdded:Connect(characterAdded)
+
+end
+
+
+
+for _,p in Players:GetPlayers() do
+	setup(p)
+end
+
+
+Players.PlayerAdded:Connect(setup)
