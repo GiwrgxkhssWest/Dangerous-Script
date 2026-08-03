@@ -1,33 +1,42 @@
 local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+
+local ESP = {}
+
+local Objects = {}
+local Connection
 
 
-local function setup(player)
+local function create(player)
 
-	if player == Players.LocalPlayer then return end
+	if player == Players.LocalPlayer then
+		return
+	end
 
 
-	local function characterAdded(char)
+	local function characterAdded(character)
 
-		local head = char:WaitForChild("Head")
+		local head = character:WaitForChild("Head",5)
+
+		if not head then
+			return
+		end
 
 
 		local gui = Instance.new("BillboardGui")
 
-		gui.Name = "HeadCircle"
+		gui.Name = "HeadCircleESP"
 		gui.Adornee = head
-		gui.Size = UDim2.new(0,80,0,80)
+		gui.Size = UDim2.new(0,70,0,70)
 		gui.AlwaysOnTop = true
 		gui.Parent = head
-
 
 
 		local circle = Instance.new("Frame")
 
 		circle.Size = UDim2.fromScale(1,1)
 		circle.BackgroundTransparency = 1
-
 		circle.Parent = gui
-
 
 
 		local corner = Instance.new("UICorner")
@@ -38,14 +47,16 @@ local function setup(player)
 		corner.Parent = circle
 
 
-
 		local stroke = Instance.new("UIStroke")
 
 		stroke.Thickness = 3
 		stroke.Color =
-			Color3.new(1,0,0)
+			Color3.fromRGB(255,0,0)
 
 		stroke.Parent = circle
+
+
+		Objects[player] = gui
 
 	end
 
@@ -60,9 +71,42 @@ local function setup(player)
 end
 
 
-for _,p in Players:GetPlayers() do
-	setup(p)
+
+function ESP.Enable()
+
+	for _,player in Players:GetPlayers() do
+		create(player)
+	end
+
+
+	Connection =
+		Players.PlayerAdded:Connect(create)
+
 end
 
 
-Players.PlayerAdded:Connect(setup)
+
+function ESP.Disable()
+
+	for _,gui in pairs(Objects) do
+
+		if gui then
+			gui:Destroy()
+		end
+
+	end
+
+
+	table.clear(Objects)
+
+
+	if Connection then
+		Connection:Disconnect()
+		Connection = nil
+	end
+
+end
+
+
+
+return ESP
