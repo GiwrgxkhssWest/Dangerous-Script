@@ -10,10 +10,9 @@ local function apply(character)
 	local highlight = Instance.new("Highlight")
 	highlight.Name = "ESPHighlight"
 	highlight.Adornee = character
-	highlight.FillColor = Color3.fromRGB(255, 0, 0)
-	highlight.OutlineColor = Color3.fromRGB(255, 255, 255)
+	highlight.FillColor = Color3.fromRGB(255,0,0)
+	highlight.OutlineColor = Color3.fromRGB(255,255,255)
 	highlight.FillTransparency = 0.4
-	highlight.OutlineTransparency = 0
 	highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
 	highlight.Parent = character
 end
@@ -37,29 +36,28 @@ local function update()
 	end
 end
 
-function ESP.Toggle()
-	ESP.Enabled = not ESP.Enabled
+
+function ESP.Enable()
+	ESP.Enabled = true
 	update()
 end
 
+
+function ESP.Disable()
+	ESP.Enabled = false
+	update()
+end
+
+
 Players.PlayerAdded:Connect(function(player)
 	player.CharacterAdded:Connect(function(character)
+		task.wait(0.2)
+
 		if ESP.Enabled then
-			task.wait(0.2)
 			apply(character)
 		end
 	end)
 end)
 
-for _, player in ipairs(Players:GetPlayers()) do
-	if player ~= LocalPlayer then
-		player.CharacterAdded:Connect(function(character)
-			if ESP.Enabled then
-				task.wait(0.2)
-				apply(character)
-			end
-		end)
-	end
-end
 
 return ESP
