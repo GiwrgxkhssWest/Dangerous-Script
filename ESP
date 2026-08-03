@@ -1,101 +1,36 @@
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 
-local ESP = {}
-ESP.Enabled = false
-
-local function createESP(character, player)
-	if not character then return end
-	if character:FindFirstChild("ESP_Highlight") then return end
-
-	local highlight = Instance.new("Highlight")
-	highlight.Name = "ESP_Highlight"
-	highlight.FillColor = Color3.fromRGB(255, 0, 0)
-	highlight.OutlineColor = Color3.fromRGB(255, 255, 255)
-	highlight.FillTransparency = 0.5
-	highlight.OutlineTransparency = 0
-	highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
-	highlight.Adornee = character
-	highlight.Parent = character
-
-	local head = character:FindFirstChild("Head")
-	if head then
-		local gui = Instance.new("BillboardGui")
-		gui.Name = "ESP_Name"
-		gui.Size = UDim2.new(0, 150, 0, 30)
-		gui.StudsOffset = Vector3.new(0, 2.5, 0)
-		gui.AlwaysOnTop = true
-		gui.Parent = head
-
-		local label = Instance.new("TextLabel")
-		label.Size = UDim2.fromScale(1, 1)
-		label.BackgroundTransparency = 1
-		label.Text = player.Name
-		label.TextScaled = true
-		label.Font = Enum.Font.GothamBold
-		label.TextColor3 = Color3.new(1, 1, 1)
-		label.TextStrokeTransparency = 0
-		label.Parent = gui
-	end
-end
-
-local function removeESP(character)
-	if not character then return end
-
-	local h = character:FindFirstChild("ESP_Highlight")
-	if h then
-		h:Destroy()
-	end
-
-	local head = character:FindFirstChild("Head")
-	if head then
-		local gui = head:FindFirstChild("ESP_Name")
-		if gui then
-			gui:Destroy()
-		end
-	end
-end
-
-local function updatePlayer(player)
+local function addHighlight(player)
 	if player == LocalPlayer then
 		return
 	end
 
+	local function apply(character)
+		if character:FindFirstChild("ESPHighlight") then
+			return
+		end
+
+		local highlight = Instance.new("Highlight")
+		highlight.Name = "ESPHighlight"
+		highlight.Adornee = character
+		highlight.FillColor = Color3.fromRGB(255, 0, 0)
+		highlight.OutlineColor = Color3.fromRGB(255, 255, 255)
+		highlight.FillTransparency = 0.4
+		highlight.OutlineTransparency = 0
+		highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+		highlight.Parent = character
+	end
+
 	if player.Character then
-		if ESP.Enabled then
-			createESP(player.Character, player)
-		else
-			removeESP(player.Character)
-		end
+		apply(player.Character)
 	end
+
+	player.CharacterAdded:Connect(apply)
 end
-
-function ESP.Toggle()
-	ESP.Enabled = not ESP.Enabled
-
-	for _, player in ipairs(Players:GetPlayers()) do
-		updatePlayer(player)
-	end
-end
-
-Players.PlayerAdded:Connect(function(player)
-	player.CharacterAdded:Connect(function(character)
-		if ESP.Enabled then
-			task.wait(0.2)
-			createESP(character, player)
-		end
-	end)
-end)
 
 for _, player in ipairs(Players:GetPlayers()) do
-	if player ~= LocalPlayer then
-		player.CharacterAdded:Connect(function(character)
-			if ESP.Enabled then
-				task.wait(0.2)
-				createESP(character, player)
-			end
-		end)
-	end
+	addHighlight(player)
 end
 
-return ESP
+Players.PlayerAdded:Connect(addHighlight)
