@@ -1,0 +1,54 @@
+local Players = game:GetService("Players")
+
+local function setup(player)
+
+	if player == Players.LocalPlayer then return end
+
+	local function charAdded(char)
+
+		local head = char:WaitForChild("Head")
+
+		local gui = Instance.new("BillboardGui")
+		gui.Size = UDim2.new(0,150,0,30)
+		gui.StudsOffset = Vector3.new(0,5,0)
+		gui.AlwaysOnTop = true
+		gui.Parent = head
+
+
+		local label = Instance.new("TextLabel")
+		label.Size = UDim2.fromScale(1,1)
+		label.BackgroundTransparency = 1
+		label.TextColor3 = Color3.new(0,1,0)
+		label.TextScaled = true
+		label.Parent = gui
+
+
+		while char.Parent do
+
+			local tool = char:FindFirstChildOfClass("Tool")
+
+			if tool then
+				label.Text = tool.Name
+			else
+				label.Text = "None"
+			end
+
+			task.wait(.2)
+		end
+	end
+
+
+	if player.Character then
+		charAdded(player.Character)
+	end
+
+	player.CharacterAdded:Connect(charAdded)
+
+end
+
+
+for _,p in Players:GetPlayers() do
+	setup(p)
+end
+
+Players.PlayerAdded:Connect(setup)
