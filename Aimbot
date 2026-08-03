@@ -4,31 +4,44 @@ local RunService = game:GetService("RunService")
 local LocalPlayer = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
 
-local AimEnabled = false
-local TargetPlayer = nil
+local Aimbot = {}
 
-local function AimAtHead(player)
-	if not player or not player.Character then return end
+Aimbot.Enabled = false
+Aimbot.Target = nil
 
-	local head = player.Character:FindFirstChild("Head")
-	if not head then return end
+local connection
 
-	Camera.CFrame = CFrame.lookAt(
-		Camera.CFrame.Position,
-		head.Position
-	)
+function Aimbot.SetTarget(player)
+	Aimbot.Target = player
 end
 
-local function ToggleAim(state)
-	AimEnabled = state
+function Aimbot.Enable()
+	if Aimbot.Enabled then return end
+
+	Aimbot.Enabled = true
+
+	connection = RunService.RenderStepped:Connect(function()
+		if not Aimbot.Enabled then return end
+		if not Aimbot.Target then return end
+		if not Aimbot.Target.Character then return end
+
+		local head = Aimbot.Target.Character:FindFirstChild("Head")
+		if not head then return end
+
+		Camera.CFrame = CFrame.lookAt(
+			Camera.CFrame.Position,
+			head.Position
+		)
+	end)
 end
 
-RunService.RenderStepped:Connect(function()
-	if AimEnabled and TargetPlayer then
-		AimAtHead(TargetPlayer)
+function Aimbot.Disable()
+	Aimbot.Enabled = false
+
+	if connection then
+		connection:Disconnect()
+		connection = nil
 	end
-end)
-
-local function SetTarget(player)
-	TargetPlayer = player
 end
+
+return Aimbot
