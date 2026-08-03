@@ -1,0 +1,68 @@
+local Players = game:GetService("Players")
+
+
+local function setup(player)
+
+	if player == Players.LocalPlayer then return end
+
+
+	local function characterAdded(char)
+
+		local head = char:WaitForChild("Head")
+
+
+		local gui = Instance.new("BillboardGui")
+
+		gui.Name = "HeadCircle"
+		gui.Adornee = head
+		gui.Size = UDim2.new(0,80,0,80)
+		gui.AlwaysOnTop = true
+		gui.Parent = head
+
+
+
+		local circle = Instance.new("Frame")
+
+		circle.Size = UDim2.fromScale(1,1)
+		circle.BackgroundTransparency = 1
+
+		circle.Parent = gui
+
+
+
+		local corner = Instance.new("UICorner")
+
+		corner.CornerRadius =
+			UDim.new(1,0)
+
+		corner.Parent = circle
+
+
+
+		local stroke = Instance.new("UIStroke")
+
+		stroke.Thickness = 3
+		stroke.Color =
+			Color3.new(1,0,0)
+
+		stroke.Parent = circle
+
+	end
+
+
+	if player.Character then
+		characterAdded(player.Character)
+	end
+
+
+	player.CharacterAdded:Connect(characterAdded)
+
+end
+
+
+for _,p in Players:GetPlayers() do
+	setup(p)
+end
+
+
+Players.PlayerAdded:Connect(setup)
