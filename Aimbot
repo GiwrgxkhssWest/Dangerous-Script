@@ -1,53 +1,34 @@
-local AimAssist = {}
-
-AimAssist.Enabled = false
-
-local RunService = game:GetService("RunService")
 local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
 
 local LocalPlayer = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
 
-local Connection = nil
+local AimEnabled = false
+local TargetPlayer = nil
 
+local function AimAtHead(player)
+	if not player or not player.Character then return end
 
-function AimAssist.Enable()
+	local head = player.Character:FindFirstChild("Head")
+	if not head then return end
 
-	if AimAssist.Enabled then
-		return
-	end
-
-	AimAssist.Enabled = true
-
-	Connection = RunService.RenderStepped:Connect(function()
-
-		-- Add your own game's training target logic here
-		-- Example: NPC dummy / test target
-
-		local Target = workspace:FindFirstChild("TestTarget")
-
-		if Target and Target:FindFirstChild("Head") then
-			Camera.CFrame = CFrame.lookAt(
-				Camera.CFrame.Position,
-				Target.Head.Position
-			)
-		end
-
-	end)
-
+	Camera.CFrame = CFrame.lookAt(
+		Camera.CFrame.Position,
+		head.Position
+	)
 end
 
-
-function AimAssist.Disable()
-
-	AimAssist.Enabled = false
-
-	if Connection then
-		Connection:Disconnect()
-		Connection = nil
-	end
-
+local function ToggleAim(state)
+	AimEnabled = state
 end
 
+RunService.RenderStepped:Connect(function()
+	if AimEnabled and TargetPlayer then
+		AimAtHead(TargetPlayer)
+	end
+end)
 
-return AimAssist
+local function SetTarget(player)
+	TargetPlayer = player
+end
