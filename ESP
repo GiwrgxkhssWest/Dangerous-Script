@@ -1,89 +1,101 @@
 local Players = game:GetService("Players")
-local localPlayer = Players.LocalPlayer
+local LocalPlayer = Players.LocalPlayer
 
 local ESP = {}
 ESP.Enabled = false
 
-local function addESP(character)
-    if not character then return end
-    if character:FindFirstChild("ESP_Highlight") then return end
+local function createESP(character, player)
+	if not character then return end
+	if character:FindFirstChild("ESP_Highlight") then return end
 
-    local highlight = Instance.new("Highlight")
-    highlight.Name = "ESP_Highlight"
-    highlight.FillColor = Color3.fromRGB(255, 0, 0)
-    highlight.OutlineColor = Color3.fromRGB(255, 255, 255)
-    highlight.FillTransparency = 0.5
-    highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
-    highlight.Parent = character
+	local highlight = Instance.new("Highlight")
+	highlight.Name = "ESP_Highlight"
+	highlight.FillColor = Color3.fromRGB(255, 0, 0)
+	highlight.OutlineColor = Color3.fromRGB(255, 255, 255)
+	highlight.FillTransparency = 0.5
+	highlight.OutlineTransparency = 0
+	highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+	highlight.Adornee = character
+	highlight.Parent = character
 
-    local head = character:FindFirstChild("Head")
-    if head then
-        local billboard = Instance.new("BillboardGui")
-        billboard.Name = "ESP_Info"
-        billboard.Size = UDim2.new(0, 200, 0, 50)
-        billboard.StudsOffset = Vector3.new(0, 2, 0)
-        billboard.AlwaysOnTop = true
-        billboard.Parent = head
+	local head = character:FindFirstChild("Head")
+	if head then
+		local gui = Instance.new("BillboardGui")
+		gui.Name = "ESP_Name"
+		gui.Size = UDim2.new(0, 150, 0, 30)
+		gui.StudsOffset = Vector3.new(0, 2.5, 0)
+		gui.AlwaysOnTop = true
+		gui.Parent = head
 
-        local label = Instance.new("TextLabel")
-        label.Size = UDim2.new(1, 0, 1, 0)
-        label.BackgroundTransparency = 1
-        label.TextColor3 = Color3.new(1, 1, 1)
-        label.TextStrokeTransparency = 0
-        label.Font = Enum.Font.SourceSansBold
-        label.TextScaled = true
-        label.Text = character.Name
-        label.Parent = billboard
-    end
+		local label = Instance.new("TextLabel")
+		label.Size = UDim2.fromScale(1, 1)
+		label.BackgroundTransparency = 1
+		label.Text = player.Name
+		label.TextScaled = true
+		label.Font = Enum.Font.GothamBold
+		label.TextColor3 = Color3.new(1, 1, 1)
+		label.TextStrokeTransparency = 0
+		label.Parent = gui
+	end
 end
 
 local function removeESP(character)
-    if not character then return end
-    local h = character:FindFirstChild("ESP_Highlight")
-    if h then h:Destroy() end
-    local head = character:FindFirstChild("Head")
-    if head then
-        local b = head:FindFirstChild("ESP_Info")
-        if b then b:Destroy() end
-    end
+	if not character then return end
+
+	local h = character:FindFirstChild("ESP_Highlight")
+	if h then
+		h:Destroy()
+	end
+
+	local head = character:FindFirstChild("Head")
+	if head then
+		local gui = head:FindFirstChild("ESP_Name")
+		if gui then
+			gui:Destroy()
+		end
+	end
 end
 
-local function refresh()
-    for _, player in ipairs(Players:GetPlayers()) do
-        if player ~= localPlayer and player.Character then
-            if ESP.Enabled then
-                addESP(player.Character)
-            else
-                removeESP(player.Character)
-            end
-        end
-    end
+local function updatePlayer(player)
+	if player == LocalPlayer then
+		return
+	end
+
+	if player.Character then
+		if ESP.Enabled then
+			createESP(player.Character, player)
+		else
+			removeESP(player.Character)
+		end
+	end
 end
 
 function ESP.Toggle()
-    ESP.Enabled = not ESP.Enabled
-    refresh()
+	ESP.Enabled = not ESP.Enabled
+
+	for _, player in ipairs(Players:GetPlayers()) do
+		updatePlayer(player)
+	end
 end
 
--- Keep ESP applied to players who spawn/respawn while enabled
 Players.PlayerAdded:Connect(function(player)
-    player.CharacterAdded:Connect(function(character)
-        if ESP.Enabled then
-            task.wait(0.1)
-            addESP(character)
-        end
-    end)
+	player.CharacterAdded:Connect(function(character)
+		if ESP.Enabled then
+			task.wait(0.2)
+			createESP(character, player)
+		end
+	end)
 end)
 
 for _, player in ipairs(Players:GetPlayers()) do
-    if player ~= localPlayer then
-        player.CharacterAdded:Connect(function(character)
-            if ESP.Enabled then
-                task.wait(0.1)
-                addESP(character)
-            end
-        end)
-    end
+	if player ~= LocalPlayer then
+		player.CharacterAdded:Connect(function(character)
+			if ESP.Enabled then
+				task.wait(0.2)
+				createESP(character, player)
+			end
+		end)
+	end
 end
 
 return ESP
