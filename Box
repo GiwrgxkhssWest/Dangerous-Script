@@ -1,35 +1,112 @@
 local Players = game:GetService("Players")
 
-local function setup(player)
+local ESP = {}
 
-	if player == Players.LocalPlayer then return end
+local Objects = {}
+local Connections = {}
 
-	local function characterAdded(char)
 
-		local highlight = Instance.new("BoxHandleAdornment")
-		highlight.Name = "BoxESP"
-		highlight.Adornee = char:WaitForChild("HumanoidRootPart")
-		highlight.Size = Vector3.new(4,6,2)
-		highlight.AlwaysOnTop = true
-		highlight.ZIndex = 5
-		highlight.Color3 = Color3.new(1,0,0)
-		highlight.Transparency = 0.5
-		highlight.Parent = char.HumanoidRootPart
+local function create(player)
+
+	if player == Players.LocalPlayer then
+		return
+	end
+
+
+	local function characterAdded(character)
+
+		local root = character:WaitForChild("HumanoidRootPart",5)
+
+		if not root then
+			return
+		end
+
+
+		local old = root:FindFirstChild("BoxESP")
+
+		if old then
+			old:Destroy()
+		end
+
+
+		local box = Instance.new("BoxHandleAdornment")
+
+		box.Name = "BoxESP"
+		box.Adornee = root
+		box.Size = Vector3.new(4,6,2)
+
+		-- outline only
+		box.Transparency = 0.3
+		box.AlwaysOnTop = true
+		box.ZIndex = 5
+
+		box.Color3 =
+			Color3.fromRGB(255,0,0)
+
+		box.Parent = root
+
+
+		Objects[player] = box
 
 	end
+
 
 
 	if player.Character then
 		characterAdded(player.Character)
 	end
 
-	player.CharacterAdded:Connect(characterAdded)
+
+	Connections[player] =
+		player.CharacterAdded:Connect(characterAdded)
 
 end
 
 
-for _,p in Players:GetPlayers() do
-	setup(p)
+
+function ESP.Enable()
+
+	for _,player in ipairs(Players:GetPlayers()) do
+		create(player)
+	end
+
+
+	ESP.PlayerConnection =
+		Players.PlayerAdded:Connect(create)
+
 end
 
-Players.PlayerAdded:Connect(setup)
+
+
+function ESP.Disable()
+
+	for _,box in pairs(Objects) do
+
+		if box then
+			box:Destroy()
+		end
+
+	end
+
+
+	for _,connection in pairs(Connections) do
+
+		if connection then
+			connection:Disconnect()
+		end
+
+	end
+
+
+	if ESP.PlayerConnection then
+		ESP.PlayerConnection:Disconnect()
+	end
+
+
+	table.clear(Objects)
+	table.clear(Connections)
+
+end
+
+
+return ESP
