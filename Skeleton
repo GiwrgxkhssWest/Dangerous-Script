@@ -1,9 +1,13 @@
 local Players = game:GetService("Players")
 
-local LocalPlayer = Players.LocalPlayer
+local ESP = {}
+
+local Objects = {}
+local Connections = {}
 
 
-local Connections = {
+local Bones = {
+
 	{"Head","UpperTorso"},
 	{"UpperTorso","LowerTorso"},
 
@@ -21,68 +25,116 @@ local Connections = {
 
 	{"LowerTorso","RightUpperLeg"},
 	{"RightUpperLeg","RightLowerLeg"},
-	{"RightLowerLeg","RightFoot"},
+	{"RightLowerLeg","RightFoot"}
+
 }
 
 
 
-local function setup(player)
+local function create(player)
 
-	if player == LocalPlayer then return end
-
-
-	local function characterAdded(char)
-
-		for _,connection in pairs(Connections) do
-
-			local a = char:FindFirstChild(connection[1])
-			local b = char:FindFirstChild(connection[2])
+	if player == Players.LocalPlayer then
+		return
+	end
 
 
-			if a and b then
+	local function characterAdded(character)
 
-				local att1 = Instance.new("Attachment")
-				local att2 = Instance.new("Attachment")
+		local folder = Instance.new("Folder")
+		folder.Name = "SkeletonESP"
+		folder.Parent = character
 
-				att1.Parent = a
-				att2.Parent = b
+
+		for _,bone in Bones do
+
+			local p1 = character:FindFirstChild(bone[1])
+			local p2 = character:FindFirstChild(bone[2])
+
+
+			if p1 and p2 then
+
+				local a1 = Instance.new("Attachment")
+				a1.Parent = p1
+
+
+				local a2 = Instance.new("Attachment")
+				a2.Parent = p2
 
 
 				local beam = Instance.new("Beam")
 
-				beam.Attachment0 = att1
-				beam.Attachment1 = att2
+				beam.Attachment0 = a1
+				beam.Attachment1 = a2
 
-				beam.Width0 = 0.05
-				beam.Width1 = 0.05
+				beam.Width0 = 0.04
+				beam.Width1 = 0.04
+
+				beam.FaceCamera = true
 
 				beam.Color =
 					ColorSequence.new(
-						Color3.new(0,1,1)
+						Color3.fromRGB(0,255,255)
 					)
 
-				beam.FaceCamera = true
-				beam.Parent = char
+				beam.Parent = folder
 
 			end
+
 		end
 
+
+		Objects[player] = folder
+
 	end
+
 
 
 	if player.Character then
 		characterAdded(player.Character)
 	end
 
-	player.CharacterAdded:Connect(characterAdded)
+
+	Connections[player] =
+		player.CharacterAdded:Connect(characterAdded)
 
 end
 
 
 
-for _,p in Players:GetPlayers() do
-	setup(p)
+function ESP.Enable()
+
+	for _,player in Players:GetPlayers() do
+		create(player)
+	end
+
+
+	ESP.Connection =
+		Players.PlayerAdded:Connect(create)
+
 end
 
 
-Players.PlayerAdded:Connect(setup)
+
+function ESP.Disable()
+
+	for _,folder in pairs(Objects) do
+
+		if folder then
+			folder:Destroy()
+		end
+
+	end
+
+
+	for _,connection in pairs(Connections) do
+		connection:Disconnect()
+	end
+
+
+	table.clear(Objects)
+
+end
+
+
+
+return ESP
