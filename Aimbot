@@ -1,0 +1,63 @@
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+
+local LocalPlayer = Players.LocalPlayer
+local Camera = workspace.CurrentCamera
+
+local AimAssistEnabled = false
+local MaxDistance = 200
+local Smoothness = 0.15
+
+local function GetClosestPlayer()
+	local Closest = nil
+	local ShortestDistance = MaxDistance
+
+	local Character = LocalPlayer.Character
+	if not Character or not Character:FindFirstChild("Head") then
+		return nil
+	end
+
+	for _, Player in pairs(Players:GetPlayers()) do
+		if Player ~= LocalPlayer 
+			and Player.Character
+			and Player.Character:FindFirstChild("Head") then
+
+			local Distance = (Character.Head.Position - Player.Character.Head.Position).Magnitude
+
+			if Distance < ShortestDistance then
+				ShortestDistance = Distance
+				Closest = Player
+			end
+		end
+	end
+
+	return Closest
+end
+
+
+RunService.RenderStepped:Connect(function()
+	if AimAssistEnabled then
+
+		local Target = GetClosestPlayer()
+
+		if Target 
+			and Target.Character 
+			and Target.Character:FindFirstChild("Head") then
+
+			local TargetPosition = Target.Character.Head.Position
+
+			Camera.CFrame = Camera.CFrame:Lerp(
+				CFrame.new(Camera.CFrame.Position, TargetPosition),
+				Smoothness
+			)
+
+		end
+	end
+end)
+
+
+-- Testing toggle
+_G.ToggleAimAssist = function()
+	AimAssistEnabled = not AimAssistEnabled
+	print("Aim Assist:", AimAssistEnabled)
+end
