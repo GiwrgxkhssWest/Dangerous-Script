@@ -1,47 +1,80 @@
+local CameraLock = {}
+
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 
 local LocalPlayer = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
 
-local Aimbot = {}
+CameraLock.Enabled = false
+CameraLock.Target = nil
 
-Aimbot.Enabled = false
-Aimbot.Target = nil
+local Connection
 
-local connection
-
-function Aimbot.SetTarget(player)
-	Aimbot.Target = player
+function CameraLock.SetTarget(Player)
+	CameraLock.Target = Player
+	print("[CameraLock] Target:", Player and Player.Name or "None")
 end
 
-function Aimbot.Enable()
-	if Aimbot.Enabled then return end
 
-	Aimbot.Enabled = true
+function CameraLock.Enable()
 
-	connection = RunService.RenderStepped:Connect(function()
-		if not Aimbot.Enabled then return end
-		if not Aimbot.Target then return end
-		if not Aimbot.Target.Character then return end
+	if CameraLock.Enabled then
+		return
+	end
 
-		local head = Aimbot.Target.Character:FindFirstChild("Head")
-		if not head then return end
+	CameraLock.Enabled = true
+
+	print("[CameraLock] Enabled")
+
+	Connection = RunService.RenderStepped:Connect(function()
+
+		if not CameraLock.Enabled then
+			return
+		end
+
+		if not CameraLock.Target then
+			return
+		end
+
+		local Character = CameraLock.Target.Character
+
+		if not Character then
+			return
+		end
+
+		local Head = Character:FindFirstChild("Head")
+
+		if not Head then
+			return
+		end
 
 		Camera.CFrame = CFrame.lookAt(
 			Camera.CFrame.Position,
-			head.Position
+			Head.Position
 		)
+
 	end)
+
 end
 
-function Aimbot.Disable()
-	Aimbot.Enabled = false
 
-	if connection then
-		connection:Disconnect()
-		connection = nil
+function CameraLock.Disable()
+
+	if not CameraLock.Enabled then
+		return
 	end
+
+	CameraLock.Enabled = false
+
+	print("[CameraLock] Disabled")
+
+	if Connection then
+		Connection:Disconnect()
+		Connection = nil
+	end
+
 end
 
-return Aimbot
+
+return CameraLock
