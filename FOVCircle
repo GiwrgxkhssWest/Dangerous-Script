@@ -1,0 +1,37 @@
+local Players = game:GetService("Players")
+
+local player = Players.LocalPlayer
+local gui = Instance.new("ScreenGui")
+gui.Name = "FOVCircle"
+gui.ResetOnSpawn = false
+gui.Parent = player:WaitForChild("PlayerGui")
+
+local circle = Instance.new("Frame")
+circle.AnchorPoint = Vector2.new(0.5, 0.5)
+circle.Position = UDim2.fromScale(0.5, 0.5)
+circle.Size = UDim2.fromOffset(200, 200)
+circle.BackgroundTransparency = 1
+circle.BorderSizePixel = 2
+circle.BorderColor3 = Color3.fromRGB(255, 255, 255)
+circle.Parent = gui
+
+local corner = Instance.new("UICorner")
+corner.CornerRadius = UDim.new(1, 0)
+corner.Parent = circle
+
+local module = {}
+
+function module.SetRadius(radius)
+    local diameter = radius * 2
+    circle.Size = UDim2.fromOffset(diameter, diameter)
+end
+
+function module.SetVisible(state)
+    circle.Visible = state
+end
+
+function module.Destroy()
+    gui:Destroy()
+end
+
+return module
